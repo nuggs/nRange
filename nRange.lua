@@ -15,7 +15,7 @@
 ]]--
 
 -- Version of the script, this will eventually use chat_msg_addon for version checking
-NRANGE_VERSION = "0.1.4"
+NRANGE_VERSION = "0.1.6"
 
 -- Slow down the update calls, we don't need to do so many
 local nRange_TimeSinceLastUpdate = 0;
@@ -223,6 +223,8 @@ end
 
 -- Check if our spell is active and if not set active to false
 local function nRange_IsActive()
+	if (UnitInVehicle("player")) then return false; end -- Hopefully this fixes the vehicle issue
+
 	if (nRange_ClassInfo.class == "warlock") then -- Here we can just check if they still have the active aura
 		local buff = UnitBuff("player", "Demonic Circle: Summon"); 
 		if (buff) then
@@ -238,7 +240,7 @@ local function nRange_IsActive()
 	elseif (nRange_ClassInfo.class == "monk") then
 		local guid = UnitGUID("pet");
 		-- We have a pet out, check and see if active is set, if not set it
-		if (guid ~= nil and UnitInVehicle("player") == false) then
+		if (guid ~= nil) then
 			if (nRange_ClassInfo.active == false) then
 				nRange_ClassInfo.active = true;
 				nRange:Show();
