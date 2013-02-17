@@ -1,3 +1,6 @@
+02/17/2013
+	Ack!! Moved the UnitInVehicle call in nRange_IsActive to the beginning of the function.  Fixes it not displaying at all
+
 02/16/2013
 	Shouldn't show when you're in a vehicle on a monk any longer. lol
 	nRange_SetMessage(int) sets the spell icon to NULL so we don't have it flashing when we use abilities,
