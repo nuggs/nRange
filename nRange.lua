@@ -223,7 +223,7 @@ end
 
 -- Check if our spell is active and if not set active to false
 local function nRange_IsActive()
-	if (UnitInVehicle("player")) then return false; end -- Hopefully this fixes the vehicle issue
+	if (UnitInVehicle("player") == true) then return false; end -- Hopefully this fixes the vehicle issue
 
 	if (nRange_ClassInfo.class == "warlock") then -- Here we can just check if they still have the active aura
 		local buff = UnitBuff("player", "Demonic Circle: Summon"); 
