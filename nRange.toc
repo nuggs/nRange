@@ -1,0 +1,10 @@
+## Interface: 50100
+## Title: nRange
+## Author: Nuggs
+## Version: 0.1.8
+## Notes: Teleport range checker for locks and monks.
+## DefaultState: Enabled
+## LoadOnDemand: 0
+## SavedVariables: nRange_Data
+## OptionalDeps:
+nRange.lua

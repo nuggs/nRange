@@ -1,0 +1,12 @@
+02/16/2013
+	Shouldn't show when you're in a vehicle on a monk any longer. lol
+	nRange_SetMessage(int) sets the spell icon to NULL so we don't have it flashing when we use abilities,
+	a better fix would be to actually just fix whatever is causing it to flash when an ability is used.
+	Removed GetSpellInfo caching, that wasn't suppose to actually be here
+	Added a new variable 'nRange_IconSet' for displaying or hiding the spell icon...  basically, a cheap workaround.
+	Rewrote a lot of the addon, some frame handling stuff was left but the core of it works completely different than before
+	
+NOTICE:
+If you want to see the old change log, look on github for nDemonic, it'll have it, we're starting fresh here.
+so fresh
+so clean

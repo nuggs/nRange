@@ -1,0 +1,5 @@
+Bug Fixes:
+Better checking on the monk, probably compare pet with the ID of the one that spawns to make sure it's up.
+
+Features:
+Rewrite the frame stuff, it's a mess and I don't know what i'm doing.  haha
