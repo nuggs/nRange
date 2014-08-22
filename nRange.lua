@@ -1,3 +1,5 @@
+local _, class = UnitClass("player");
+if (class == "MONK" or class == "WARLOCK") then
 --[[
 	nRange - Teleport range checker for warlocks and monks.
 
@@ -14,34 +16,84 @@
      * http://www.wtfpl.net/ for more details.
 ]]--
 
--- Version of the script, this will eventually use chat_msg_addon for version checking
-NRANGE_VERSION = "0.1.6"
+-- Version that gets sent to people, I don't do revisions.  :)
+NRANGE_VERSION = "0.8.9";
 
 -- Slow down the update calls, we don't need to do so many
 local nRange_TimeSinceLastUpdate = 0;
 local nRange_UpdateInterval = 0.2;
 local CLEAR, COOLDOWN, INRANGE, OUTRANGE = -1, 1, 2, 3;
 local nRange_IconSet = false;
+local string_format, square = string.format, sqrt;
+nRange_Communication = true;  -- You can set this to false, it doesn't really cause performance issues and helps with version tracking...
 
 -- We'll store our settings within this
 nRange_Data = {};
 
 -- Spell information, class based since this works for monks and warlocks
 local nRange_ClassInfo = {
-	class		= nil,		-- Store class name for conditionals
 	active		= false,	-- Do we have a teleport active
 	cooldown	= false,	-- Set true if on cooldown
 	teleport	= nil,		-- This gets set to the spell ID for the teleport spell depending on class
 	summon		= nil,		-- Same as above but with the summon spell
 	message		= nil,		-- message to display, don't change
 	icon		= nil,		-- spell icon for displaying that shit
-	locked		= true		-- obviously used for frame locking, keep true as the default unless you like errors when you click it
+	distance	= true,		-- Enable distance tracking
+	locked		= true,		-- obviously used for frame locking, keep true as the default unless you like errors when you click it
+	showicon	= true		-- Show the icon or not
 };
 
--- dialog for disabling addon if you're not on a warlock or monk
-StaticPopupDialogs["DISABLE_NRANGE"] = {
-	text = "This addon only supports Warlocks and Monks, press accept to disable for this character.",
-	button1 = "Accept", OnAccept = nRange_Disable, timeout = 0, whileDead = 1,
+--[[ 
+	Information about the current portal.
+	Astrolabe (c) James Carrothers
+]]--
+local nRange_Teleport = {
+	facing		= 0,
+	range		= 0,		-- trying something
+	inside		= false,
+	ping = {
+		x		= 0,
+		y		= 0,
+		bx		= 0,
+		by		= 0
+	},
+	offset = {
+		x		= 0,
+		y		= 0
+	}
+};
+
+-- Astrolabe
+local MinimapSize = {
+	indoor = {
+		[0] = 300, -- scale
+		[1] = 240, -- 1.25
+		[2] = 180, -- 5/3
+		[3] = 120, -- 2.5
+		[4] = 80,  -- 3.75
+		[5] = 50,  -- 6
+	},
+	outdoor = {
+		[0] = 466 + 2/3, -- scale
+		[1] = 400,       -- 7/6
+		[2] = 333 + 1/3, -- 1.4
+		[3] = 266 + 2/6, -- 1.75
+		[4] = 200,       -- 7/3
+		[5] = 133 + 1/3, -- 3.5
+	},
+};
+
+
+local function nRange_Reset()
+	nRange_Data.active = false;
+	nRange_ClassInfo.active = false;
+	ReloadUI();
+end
+
+-- Reset
+StaticPopupDialogs["RESET_NRANGE"] = {
+	text = "Click reset to reset while you reset your reset.",
+	button1 = "Reset", OnAccept = nRange_Reset, timeout = 0, whileDead = 1,
 };
 
 -- Help information
@@ -50,14 +102,16 @@ nRange_Help = {
 	"  |cFF008B8B/nrange reset|r" .. "   - |cff00ffffReset nRange to it's default settings|r",
 	"  |cFF008B8B/nrange lock|r" .. "     - |cff00ffffLock nRange|r",
 	"  |cFF008B8B/nrange unlock|r" .. " - |cff00ffffUnlock nRange|r",
+	"  |cFF008B8B/nrange distance|r" .. " - |cff00ffffEnable/disable distance tracking|r",
 };
 
 -- Create our addon frame
 local nRange = CreateFrame("Frame", "nRange", UIParent);
 nRange:SetWidth(200);
-nRange:SetHeight(30);
+nRange:SetHeight(40);
 
 local nRangeText = nRange:CreateFontString(nRange, "ARTWORK", "GameFontNormal");
+local nRangeDistance = nRange:CreateFontString(nRange, "ARTWORK", "GameFontNormal");
 local function nRange_CreateTexture()
 	nRangeTexture = nRange:CreateTexture(nil, "BACKGROUND");
 	nRangeTexture:SetTexture(nil);
@@ -65,6 +119,11 @@ local function nRange_CreateTexture()
 	nRange.texture = nRangeTexture;
 	nRangeText:SetAllPoints(nRange);
 	nRangeText:SetFont("Fonts\\ARIALN.TTF", 14, "OUTLINE");
+	if nRange_ClassInfo.distance == true then
+		nRangeDistance:SetAllPoints(nRange);
+		nRangeDistance:SetFont("Fonts\\ARIALN.TTF", 12, "OUTLINE");
+		nRangeDistance:SetPoint("BOTTOM", 0, -40);
+	end
 	nRange:SetMovable(false);
 	nRange:EnableMouse(false);
 end
@@ -118,16 +177,20 @@ end
 -- set the message of cooldown or whatever
 local function nRange_SetMessage(message_type)
 	local name = nRange_ClassInfo.teleport;
-	if (message_type == COOLDOWN) then
+	if message_type == COOLDOWN then
 		nRange_ClassInfo.message = name .. ": On Cooldown!";
 		nRangeText:SetTextColor(1, 0, 0);
-	elseif (message_type == INRANGE) then -- In range
+	elseif message_type == INRANGE then -- In range
 		nRange_ClassInfo.message = name .. ": In Range!";
-		nRangeText:SetTextColor(0, 1, 0);
-	elseif (message_type == OUTRANGE) then -- Out of range
+		if nRange_ClassInfo.distance == false then
+			nRangeText:SetTextColor(0, 1, 0);
+		end
+	elseif message_type == OUTRANGE then -- Out of range
 		nRange_ClassInfo.message = name .. ": Out of Range!";
-		nRangeText:SetTextColor(1, 0, 0);
-	elseif (message_type == CLEAR) then -- This is for when we clear the portal
+		if nRange_ClassInfo.distance == true then
+			nRangeText:SetTextColor(1, 0, 0);
+		end
+	elseif message_type == CLEAR then -- This is for when we clear the portal
 		nRange_ClassInfo.message = nil;
 		nRangeIconTex:SetTexture(nil);
 		nRange_IconSet = false;
@@ -138,37 +201,51 @@ end
 -- clear our stuff out
 local function nRange_Clear()
 	nRange_ClassInfo.active = false;
+	nRange_Data.active = false;
 	nRange_SetMessage(CLEAR);
 	nRangeIconTimer:SetText(nil);
-	if (nRange_ClassInfo.locked == true) then
+	if nRange_ClassInfo.locked == true then
 		nRange:Hide();
 	end
 end
 
 -- Set the proper spells depending on class
 local function nRange_SetClass()
-	if (select(2,UnitClass("player")) == "WARLOCK") then
+	if class == "WARLOCK" then
 		local _, _, icon = GetSpellInfo(48020);
 		nRange_ClassInfo.teleport = GetSpellInfo(48020);
 		nRange_ClassInfo.summon = GetSpellInfo(48018);
 		nRange_ClassInfo.icon = icon;
-		nRange_ClassInfo.class = "warlock";
-	elseif (select(2,UnitClass("player")) == "MONK") then
+	elseif class == "MONK" then
 		local _, _, icon = GetSpellInfo(119996);
 		nRange_ClassInfo.teleport = GetSpellInfo(119996);
-		nRange_ClassInfo.summon = GetSpellInfo(119052); --101643
+		nRange_ClassInfo.summon = GetSpellInfo(101643);
 		nRange_ClassInfo.icon = icon;
-		nRange_ClassInfo.class = "monk";
 	end
-	-- Create the icon stuff here, after we have our spell icons
 	nRange_CreateIcon();
+end
+
+-- Get the distance from our teleport
+local function nRange_GetDistance()
+	local x, y
+
+	if nRange_Teleport.inside then
+		x = (nRange_Teleport.ping.x + nRange_Teleport.offset.x) * MinimapSize.indoor[Minimap:GetZoom()]
+		y = (nRange_Teleport.ping.y + nRange_Teleport.offset.y) * MinimapSize.indoor[Minimap:GetZoom()]
+	else
+		x = (nRange_Teleport.ping.x + nRange_Teleport.offset.x) * MinimapSize.outdoor[Minimap:GetZoom()]
+		y = (nRange_Teleport.ping.y + nRange_Teleport.offset.y) * MinimapSize.outdoor[Minimap:GetZoom()]
+	end
+	nRange_Teleport.range = square(x * x + y * y);
+
+	if nRange_Teleport.range > 100 and class == "MONK" then nRange_Clear(); end
 end
 
 -- Check the cooldown of the spell
 local function nRange_GetCooldown()
 	local name = nRange_ClassInfo.teleport;
 	local _, duration = GetSpellCooldown(name);
-	if (duration and duration > 1.5) then
+	if duration and duration > 1.5 then
 		nRange_ClassInfo.cooldown = true;
 	else
 		nRange_ClassInfo.cooldown = false;
@@ -180,16 +257,16 @@ end
 local function nRange_UpdateCooldown()
 	local name = nRange_ClassInfo.teleport;
 	local start, duration = GetSpellCooldown(name);
-	local cooldown, r, g, b = floor(start + duration - GetTime() + 1), 0, 0, 1;
-	if (cooldown > 16) then
+	local cooldown, r, g, b = floor(start + duration - GetTime() + .5), 0, 0, 1;
+	if cooldown > 16 then
 		r, g, b = 0, 1, 0;
-	elseif (cooldown > 8) then
+	elseif cooldown > 8 then
 		r, g, b = 1, 1, 0;
 	else
 		r, g, b = 1, 0, 0;
 	end
 
-	if (start > 0 and duration > 0) then
+	if start > 0 and duration > 0 then
 		nRangeIconTimer:SetTextColor(r, g, b);
 		nRangeIconTimer:SetText(cooldown);
 		return;
@@ -199,21 +276,27 @@ local function nRange_UpdateCooldown()
 	end
 end
 
+local function nRange_SetDistanceColor(distance)
+	if distance < 25 then
+		nRangeText:SetTextColor(0, 1, 0);
+	elseif distance > 25 and distance < 40 then
+		nRangeText:SetTextColor(1, .50, 0);
+	elseif distance >= 40 then
+		nRangeText:SetTextColor(1, 0, 0);
+	end
+end
+
 -- Check if we're in range
 local function nRange_InRange()
-	-- lmao, we have to check if our pet is in range since transcendence uses pets.
-	if (nRange_ClassInfo.class == "monk") then
-		local name = nRange_ClassInfo.teleport;
-		local inRange, unit = 0, "pet";
-		inRange = IsSpellInRange(name, unit);
-		if (inRange == 1) then
+	if class == "MONK" then
+		if nRange_Teleport.range <= 40 then
 			return true;
 		else
 			return false;
 		end
-	elseif (nRange_ClassInfo.class == "warlock") then -- We can check if the spell is usable for warlocks.
-		local usable, nomana = IsUsableSpell(nRange_ClassInfo.teleport);
-		if (not usable and not nomana) then
+	else
+		local usable, _ = IsUsableSpell(nRange_ClassInfo.teleport);
+		if (not usable) then
 			return false
 		else
 			return true
@@ -223,12 +306,10 @@ end
 
 -- Check if our spell is active and if not set active to false
 local function nRange_IsActive()
-	if (UnitInVehicle("player") == true) then return false; end -- Hopefully this fixes the vehicle issue
-
-	if (nRange_ClassInfo.class == "warlock") then -- Here we can just check if they still have the active aura
+	if class == "WARLOCK" then -- Here we can just check if they still have the active aura
 		local buff = UnitBuff("player", "Demonic Circle: Summon"); 
-		if (buff) then
-			if (nRange_ClassInfo.active == false) then
+		if buff then
+			if nRange_ClassInfo.active == false then
 				nRange_ClassInfo.active = true;
 				nRange:Show();
 			end
@@ -237,14 +318,10 @@ local function nRange_IsActive()
 			nRange_Clear();
 			return false;
 		end
-	elseif (nRange_ClassInfo.class == "monk") then
-		local guid = UnitGUID("pet");
-		-- We have a pet out, check and see if active is set, if not set it
-		if (guid ~= nil) then
-			if (nRange_ClassInfo.active == false) then
-				nRange_ClassInfo.active = true;
-				nRange:Show();
-			end
+	elseif class == "MONK" then
+		if nRange_Data.active == true then
+			nRange_ClassInfo.active = true;
+			nRange:Show();
 			return true;
 		else -- It's not active any longer, let's set it to false
 			nRange_Clear();
@@ -257,15 +334,28 @@ end
 function nRange:ADDON_LOADED(name)
 	-- Set defaults if we don't have any
 	if (name == "nRange") then
-		if (nRange_Data.x == nil) then
+		if nRange_Data.x == nil then
 			nRange_Data.x = 0;
 		end
-		if (nRange_Data.y == nil) then
+		if nRange_Data.y == nil then
 			nRange_Data.y = 0;
 		end
-		if (nRange_Data.Anchor == nil) then
+		if nRange_Data.Anchor == nil then
 			nRange_Data.Anchor = "CENTER";
 		end
+		if nRange_Data.showicon == nil then
+			nRange_Data.showicon = nRange_ClassInfo.showicon;
+		end
+		
+		if nRange_Data.active == nil then
+			nRange_Data.active = false;
+			nRange_ClassInfo.active = false;
+		end
+
+		nRange_ClassInfo.showicon = nRange_Data.showicon;
+		--[[if (nRange_Data.notified == nil) then
+			nRange_Data.notified = false;
+		end]]--  Enable if there's complaints.
 		nRange_CreateTexture();
 		nRange:ClearAllPoints();
 		nRange:SetPoint(nRange_Data.Anchor, nRange_Data.x, nRange_Data.y);
@@ -275,24 +365,60 @@ end
 
 -- set some additional stuff we couldn't when the addon was loading
 function nRange:PLAYER_LOGIN()
-	-- Do the usual event registering if we're on a lock or monk, otherwise, disable
-	if (select(2,UnitClass("player")) == "WARLOCK") or (select(2,UnitClass("player")) == "MONK") then
-		nRange:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
-		nRange:RegisterEvent("PLAYER_DEAD");
-		nRange:RegisterEvent("ZONE_CHANGED_NEW_AREA");
-		nRange_SetClass();
-		nRange_IsActive();
-	else
-		StaticPopup_Show("DISABLE_NRANGE");
-	end
+	nRange:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+	nRange:RegisterEvent("PLAYER_DEAD");
+	nRange:RegisterEvent("ZONE_CHANGED_NEW_AREA");
+	nRange:RegisterEvent("MINIMAP_PING");
+	nRange_SetClass();
+	nRange_Clear();
+	nRange_IsActive();
 	nRange:UnregisterEvent("PLAYER_LOGIN");
 end
 
--- Changed from nDemonic, we're checking this now and only comparing unitID and spellName
+-- EchoPort
+function nRange:MINIMAP_PING()
+		local newX, newY = Minimap:GetPingPosition();
+		local offX = nRange_Teleport.ping.x - newX;
+		local offY = nRange_Teleport.ping.y - newY;
+
+		nRange_Teleport.offset.x = nRange_Teleport.offset.x + offX;
+		nRange_Teleport.offset.y = nRange_Teleport.offset.y + offY;
+		nRange_Teleport.ping.x = newX;
+		nRange_Teleport.ping.y = newY;
+end
+
+-- Astrolabe
+function nRange:MINIMAP_UPDATE_ZOOM()
+	local Minimap = Minimap;
+	local curZoom = Minimap:GetZoom();
+
+	if (GetCVar("minimapZoom") == GetCVar("minimapInsideZoom")) then
+		if (curZoom < 2) then
+			Minimap:SetZoom(curZoom + 1);
+		else
+			Minimap:SetZoom(curZoom - 1);
+		end
+	end
+
+	if ((GetCVar("minimapZoom") + 0) == Minimap:GetZoom()) then
+		nRange_Teleport.inside = true;
+	else
+		nRange_Teleport.inside = false;
+	end
+	Minimap:SetZoom(curZoom);
+end
+
 function nRange:UNIT_SPELLCAST_SUCCEEDED(unitID, spellName, _, _, _)
-	-- Check if it's from the player and if it's one of our summoning spells
-	if (unitID == "player" or unitID == "pet" and spellName == nRange_ClassInfo.summon) then
-		nRange_ClassInfo.active = true;
+	if unitID == "player" and spellName == nRange_ClassInfo.summon or (spellName == nRange_ClassInfo.teleport and class == "MONK") then
+		nRange_ClassInfo.active, nRange_Data.active = true, true;
+		if (nRange_ClassInfo.distance == true) then
+			nRange_Teleport.facing = GetPlayerFacing();
+			nRange_Teleport.ping.x = 0;
+			nRange_Teleport.ping.y = 0;
+			nRange_Teleport.offset.x = 0;
+			nRange_Teleport.offset.y = 0;
+			Minimap:PingLocation(0, 0);
+		end
 		nRange:Show();
 	end
 end
@@ -304,7 +430,8 @@ end
 
 -- Clear it on zone changes if it's inactive(switching instances, battlegrounds and whatnot)
 function nRange:ZONE_CHANGED_NEW_AREA()
-	if (nRange_IsActive() == false and nRange_ClassInfo.active == true) then
+	if class == "MONK" then nRange_Clear();
+	elseif (nRange_IsActive() == false and nRange_ClassInfo.active == true) then
 		nRange_Clear();
 	end
 end
@@ -312,13 +439,27 @@ end
 -- Our main update handler, runs ever .2 seconds, cooldown updates every pass.
 function nRange_OnUpdate(self, elapsed)
 	nRange_TimeSinceLastUpdate = nRange_TimeSinceLastUpdate + elapsed;
-	-- We want to be sure that it's active and on cooldown.  We don't want to just update this every pass when there's no reason to
-	if (nRange_IsActive() == true and nRange_ClassInfo.active == true and nRange_ClassInfo.cooldown == true) then
+	if nRange_ClassInfo.active == true and nRange_ClassInfo.cooldown == true then
 		nRange_UpdateCooldown();
 	end
 	while (nRange_TimeSinceLastUpdate > nRange_UpdateInterval) do
 		if (nRange_IsActive() == true and nRange_ClassInfo.active == true) then -- Check if we're active
-			if (nRange_IconSet == false) then -- Some hackery because the icon likes to show when it shouldn't.
+			if (nRange_ClassInfo.distance == true) then
+				local x, y = Minimap:GetPingPosition()
+				nRange_Teleport.ping.x = x;
+				nRange_Teleport.ping.y = y;
+				local distance = nRange_Teleport.range;
+				nRange_GetDistance();
+
+				if (((distance - 1) >= 0) and ((distance - 1) < 1)) then
+					nRangeDistance:SetText(string_format("%d yard away", distance));
+				else
+					nRangeDistance:SetText(string_format("%d yards away", distance));
+				end
+				nRange_SetDistanceColor(distance);
+			end
+
+			if (nRange_IconSet == false and nRange_ClassInfo.showicon) then
 				nRangeIconTex:SetTexture(nRange_ClassInfo.icon);
 				nRange_IconSet = true;
 			end
@@ -366,7 +507,19 @@ SlashCmdList['NRANGE'] = function(arg)
 	elseif (arg == 'unlock') then
 		nRange_Unlock();
 	elseif (arg == 'reset') then
-		--nRange_Reset();
+		StaticPopup_Show("RESET_NRANGE");
+	elseif (arg == 'distance') then
+		if (nRange_ClassInfo.distance == true) then
+			nRange_ClassInfo.distance = false;
+		else
+			nRange_ClassInfo.distance = true;
+		end
+	elseif (arg == 'icon') then
+		if (nRange_ClassInfo.showicon == true) then
+			nRange_ClassInfo.showicon = false;
+		else
+			nRange_ClassInfo.showicon = true;
+		end
 	else
 		for _, msg in ipairs(nRange_Help) do
 			DEFAULT_CHAT_FRAME:AddMessage(msg);
@@ -375,3 +528,6 @@ SlashCmdList['NRANGE'] = function(arg)
 end
 SLASH_NRANGE1 = '/nrange'
 SLASH_NRANGE2 = '/nr'
+else
+	nRange_Communication = false;
+end

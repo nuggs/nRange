@@ -1,0 +1,23 @@
+      ____                                       
+     /\  _`\                                     
+  ___\ \ \L\ \     __      ___      __      __   
+/' _ `\ \ ,  /   /'__`\  /' _ `\  /'_ `\  /'__`\ 
+/\ \/\ \ \ \\ \ /\ \L\.\_/\ \/\ \/\ \L\ \/\  __/ 
+\ \_\ \_\ \_\ \_\ \__/.\_\ \_\ \_\ \____ \ \____\
+ \/_/\/_/\/_/\/ /\/__/\/_/\/_/\/_/\/___L\ \/____/
+                                    /\____/      
+  0.2.6  http://imightstabyou.com   \_/__/       
+---------------------------------------------------
+
+Most anything you need to configure with the addon can be done from the
+/nrange command.  If you need to edit anything further or want more
+modifications you'll have to edit the lua yourself.
+
+Luckily, I keep a git repository that you can access to keep up to date
+without having to sacrifice your changes.  Just need to read up on git
+so you can take advatange of it.
+
+If you have any bugs or feature requests, feel free to send them my way,
+I'm in the process of setting up an issue tracker among other things.
+
+Regards

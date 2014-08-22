@@ -1,4 +1,61 @@
+10/21/2013
+	Added nRange_Clear to GetDistance for monks when they go further than 100 yards.
+
+09/17/2013
+	Added check in zone_changed_new_area to clear automatically for monks without question.  This should fix the
+		the issue with it showing when it shouldn't.
+
+09/14/2013
+	Updated for 5.4
+	Removed all dependancies on pets from monks to relfect changes from Blizzard
+	Adjusted distance setting a smidge
+	adjusted monks spell to be based on distance, may not be completely accurate
+	added nRange_Reset in case monks bug out and you need to hide it.
+
+08/24/2013
+	Range should be displayed almost properly, forgive a yard or two off.
+	Fixed setting distance, reversed "indoor" and "outdoour" I fucked up, sorry guys.
+	Changed color setting, lol...  Now that we get distance properly(Mostly, it might be off a yard or two)...  I suck.
+	Indoor outdoor transitions are still incorrectly handled, I'm working on it...
+
+08/06/2013
+	Made a few changes, I honestly don't remember what they were.  :)
+	Fixed a bug from 0.7.6 which caused it to not display the distance.
+	Started changing how range is stored and called.
+	Had a strange dream I uploaded code last night, caused me to upload code that was broke,
+		that was pretty awesome.  :/
+
+07/29/2013
+	Fixed UNIT_SPELLCAST_SUCCEEDED call.  Apparently, I formated my conditional incorrectly and it was setting
+		stuff it should set whenever a spell was cast.
+	Added distance checking, it's sloppy, it's straight from Astrolabe with help from kjado(EchoPort) with minor changes from me.
+	added nRange_GetDistance for checking the distance of our ping
+	We now listen for the events dealing with minimap zoom updates and pings
+	Added new text nRangeDistance
+	Probably a few things I forgot about.  I'm awesome like that.  Do drugs
+
+05/22/2013
+	Updated for patch 5.3
+	Some other changes I don't remember, version is 0.3.0...  lol
+
+04/04/2013
+	Players should only get cached if they aren't cached already instead of clearing anyways on full cache.(Not that it matters)
+	Changed max cache to 5
+
+03/11/2013
+	Version change
+	Uploaded to WoWI/Curse, sorry, I was busy the past week and a half
+
+02/26/2013
+	Fixed it showing in vehicles and whatnot
+	Removed a debug message from the communication module
+
+02/23/2013
+	Finished(I hope) the version tracking, took a while, i don't have many friends to test with.  :p
+
 02/17/2013
+	Started version tracking since my last little screw up.
+	Corrected the cooldown calculation, it was about .5 seconds too slow.
 	Ack!! Moved the UnitInVehicle call in nRange_IsActive to the beginning of the function.  Fixes it not displaying at all
 
 02/16/2013
