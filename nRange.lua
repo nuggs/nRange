@@ -17,7 +17,7 @@ if (class == "MONK" or class == "WARLOCK") then
 ]]--
 
 -- Version that gets sent to people, I don't do revisions.  :)
-NRANGE_VERSION = "0.8.9";
+NRANGE_VERSION = "0.9.1";
 
 -- Slow down the update calls, we don't need to do so many
 local nRange_TimeSinceLastUpdate = 0;
