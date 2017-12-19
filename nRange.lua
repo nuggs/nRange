@@ -1,19 +1,26 @@
 local _, class = UnitClass("player");
 if (class == "MONK" or class == "WARLOCK") then
 --[[
-	nRange - Teleport range checker for warlocks and monks.
+	The MIT License (MIT)
 
-	Copyright © 2013 Anthony Goins <turncoat@imightstabyou.com>
+	Copyright (c) 2015-2018 Anthony "Turncoat Tony" Goins
 
-	This work is free. You can redistribute it and/or modify it under the
-	terms of the Do What The Fuck You Want To Public License, Version 2,
-	as published by Sam Hocevar. See the COPYING file for more details.
-	
-	This program is free software. It comes without any warranty, to
-     * the extent permitted by applicable law. You can redistribute it
-     * and/or modify it under the terms of the Do What The Fuck You Want
-     * To Public License, Version 2, as published by Sam Hocevar. See
-     * http://www.wtfpl.net/ for more details.
+	Permission is hereby granted, free of charge, to any person obtaining a copy of
+	this software and associated documentation files (the "Software"), to deal in
+	the Software without restriction, including without limitation the rights to
+	use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+	the Software, and to permit persons to whom the Software is furnished to do so,
+	subject to the following conditions:
+
+	The above copyright notice and this permission notice shall be included in all
+	copies or substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+	FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+	COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+	IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+	CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]--
 
 -- Version that gets sent to people, I don't do revisions.  :)
@@ -43,7 +50,7 @@ local nRange_ClassInfo = {
 	showicon	= true		-- Show the icon or not
 };
 
---[[ 
+--[[
 	Information about the current portal.
 	Astrolabe (c) James Carrothers
 ]]--
@@ -307,7 +314,7 @@ end
 -- Check if our spell is active and if not set active to false
 local function nRange_IsActive()
 	if class == "WARLOCK" then -- Here we can just check if they still have the active aura
-		local buff = UnitBuff("player", "Demonic Circle: Summon"); 
+		local buff = UnitBuff("player", "Demonic Circle: Summon");
 		if buff then
 			if nRange_ClassInfo.active == false then
 				nRange_ClassInfo.active = true;
@@ -346,7 +353,7 @@ function nRange:ADDON_LOADED(name)
 		if nRange_Data.showicon == nil then
 			nRange_Data.showicon = nRange_ClassInfo.showicon;
 		end
-		
+
 		if nRange_Data.active == nil then
 			nRange_Data.active = false;
 			nRange_ClassInfo.active = false;
