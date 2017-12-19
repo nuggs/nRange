@@ -1,7 +1,7 @@
 ## Interface: 70300
 ## Title: nRange
 ## Author: Nuggs
-## Version: 0.9.8.5
+## Version: 0.9.8.6
 ## Notes: Teleport range checker for locks and monks.
 ## DefaultState: Enabled
 ## LoadOnDemand: 0
