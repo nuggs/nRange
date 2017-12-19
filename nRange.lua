@@ -23,7 +23,7 @@ if (class == "MONK" or class == "WARLOCK") then
     CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]--
 
-NRANGE_VERSION = "0.9.8.5";
+NRANGE_VERSION = "0.9.8.6";
 
 nRange_Communication = false;  -- Some people had issues, can set to true if you want
 local nRange_TimeSinceLastUpdate = 0;
@@ -411,13 +411,12 @@ end
 function nRange:UNIT_SPELLCAST_SUCCEEDED(unitID, spellName, _, _, _)
     if unitID == "player" and spellName == nRange_ClassInfo.summon or (spellName == nRange_ClassInfo.teleport and class == "MONK") then
         if ((nRange_ClassInfo.distance == true and nRange_ClassInfo.active == false) or (nRange_ClassInfo.distance == true and class == "MONK")) then
-    DEFAULT_CHAT_FRAME:AddMessage("Testing inside");
             nRange_Teleport.facing = GetPlayerFacing();
             nRange_Teleport.ping.x = 0;
             nRange_Teleport.ping.y = 0;
             nRange_Teleport.offset.x = 0;
             nRange_Teleport.offset.y = 0;
-    PingMinimap();
+            PingMinimap();
         end
         nRange_ClassInfo.active, nRange_Data.active = true, true;
         nRange:Show();
