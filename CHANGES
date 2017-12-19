@@ -1,3 +1,6 @@
+12/18/2017
+    Forgot to remove some debugging code.
+
 12/03/2017
 	Updated for 7.3
 	Removed changes to event MINIMAP_PING due to issues.
