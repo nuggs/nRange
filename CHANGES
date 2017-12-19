@@ -1,3 +1,33 @@
+12/03/2017
+	Updated for 7.3
+	Removed changes to event MINIMAP_PING due to issues.
+	Added function PingMinimap
+
+10/25/2016
+    Updated for 7.1
+    Fixed lua error throwing with monks due to an incorrect if check
+
+10/21/2016
+    Updated for Legion
+    Fixed monks transfer to work correctly with legion changes
+    Fixed warlock to work correctly with legion changes
+    Probably a few other things from other the year.
+
+12/19/2015
+    Removed Astrolabe, fixes nrange breaking in arena.
+
+07/12/2015
+    Changed UnitBuff to use GetSpellInfo to fix not showing if not in english.
+
+07/07/2015
+    Disabled nRange_Communication, can be enabled using slash commands
+    If you have the transcendence buff during a reload, nrange should display after reloading the ui
+    Changed out of range from english to ERR_OUT_OF_RANGE
+    Use meters instead of yards if your locales not set to enUS
+    Now puts an icon on the minimap of your portal location
+    Enhanced slash command to accept multiple arguments
+    Started process of allowing addon communication to be enabled by slash commands
+
 10/21/2013
 	Added nRange_Clear to GetDistance for monks when they go further than 100 yards.
 
@@ -65,7 +95,7 @@
 	Removed GetSpellInfo caching, that wasn't suppose to actually be here
 	Added a new variable 'nRange_IconSet' for displaying or hiding the spell icon...  basically, a cheap workaround.
 	Rewrote a lot of the addon, some frame handling stuff was left but the core of it works completely different than before
-	
+
 NOTICE:
 If you want to see the old change log, look on github for nDemonic, it'll have it, we're starting fresh here.
 so fresh
