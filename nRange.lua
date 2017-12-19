@@ -1,26 +1,26 @@
 local _, class = UnitClass("player");
 if (class == "MONK" or class == "WARLOCK") then
 --[[
-	The MIT License (MIT)
+    The MIT License (MIT)
 
-	Copyright (c) 2015-2018 Anthony "Turncoat Tony" Goins
+    Copyright (c) 2015-2018 Anthony "Turncoat Tony" Goins
 
-	Permission is hereby granted, free of charge, to any person obtaining a copy of
-	this software and associated documentation files (the "Software"), to deal in
-	the Software without restriction, including without limitation the rights to
-	use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-	the Software, and to permit persons to whom the Software is furnished to do so,
-	subject to the following conditions:
+    Permission is hereby granted, free of charge, to any person obtaining a copy of
+    this software and associated documentation files (the "Software"), to deal in
+    the Software without restriction, including without limitation the rights to
+    use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+    the Software, and to permit persons to whom the Software is furnished to do so,
+    subject to the following conditions:
 
-	The above copyright notice and this permission notice shall be included in all
-	copies or substantial portions of the Software.
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
 
-	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-	FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-	COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-	IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-	CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+    FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+    COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+    IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]--
 
 NRANGE_VERSION = "0.9.8.5";
@@ -398,7 +398,7 @@ end
 
 function PingMinimap()
     Minimap:PingLocation(0,0);
-	local newX, newY = Minimap:GetPingPosition();
+    local newX, newY = Minimap:GetPingPosition();
     local offX = nRange_Teleport.ping.x - newX;
     local offY = nRange_Teleport.ping.y - newY;
 
@@ -411,13 +411,13 @@ end
 function nRange:UNIT_SPELLCAST_SUCCEEDED(unitID, spellName, _, _, _)
     if unitID == "player" and spellName == nRange_ClassInfo.summon or (spellName == nRange_ClassInfo.teleport and class == "MONK") then
         if ((nRange_ClassInfo.distance == true and nRange_ClassInfo.active == false) or (nRange_ClassInfo.distance == true and class == "MONK")) then
-			DEFAULT_CHAT_FRAME:AddMessage("Testing inside");
+    DEFAULT_CHAT_FRAME:AddMessage("Testing inside");
             nRange_Teleport.facing = GetPlayerFacing();
             nRange_Teleport.ping.x = 0;
             nRange_Teleport.ping.y = 0;
             nRange_Teleport.offset.x = 0;
             nRange_Teleport.offset.y = 0;
-			PingMinimap();
+    PingMinimap();
         end
         nRange_ClassInfo.active, nRange_Data.active = true, true;
         nRange:Show();
